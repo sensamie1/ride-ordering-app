@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Side Navigation Bar</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+    }
+
+    .sidenav {
+      height: 100%;
+      width: 250px;
+      position: fixed;
+      top: 0;
+      left: -250px;
+      background-color: #074e02ef;
+      padding-top: 60px;
+      transition: 0.5s;
+    }
+
+    .sidenav a {
+      padding: 10px 15px;
+      text-decoration: none;
+      font-size: 18px;
+      color: #fff;
+      display: block;
+      transition: 0.3s;
+    }
+
+    .sidenav a:hover {
+      background-color: #599e54;
+    }
+
+    .logo-image {
+      display: block;
+      width: 200px;
+      height: auto;
+      border-radius: 5px;
+      margin: 0 auto;
+      margin-top: 20px;
+    }
+
+    .menu-icon {
+      font-size: 24px;
+      cursor: pointer;
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      padding-left: 5px;
+      padding-right: 5px;
+      background-color: #074e02ef;
+      color: #fff;
+      z-index: 2;
+    }
+
+    /* Media query for screens smaller than 768px */
+    @media screen and (max-width: 768px) {
+      .sidenav {
+        width: 200px;
+      }
+      .content {
+        margin-left: 0;
+      }
+      
+    }
+  </style>
+</head>
+<body>
+
+  <div class="sidenav" id="sidenav">
+    <% if (sender) { %>
+      <a href="/views/senders/sender-home" class="active"><i class="fa fa-home" style="padding-right: 10px;"></i>Home (<%= `${sender.first_name}` %>)</a>
+      <a href="/views/senders/book-ride" class="active"><i class="fa fa-thumb-tack" style="font-size:18px; padding-right: 10px;"></i>Book Ride</a>
+      <a href="/views/senders/my-rides"><i class="fa fa-road" style="font-size:18px; padding-right: 10px;"></i>My Rides</a>
+      <a href="/views/senders/logout"><i class="fa fa-sign-out" aria-hidden="true" style="padding-right: 10px;"></i>Logout</a>
+      <a href="/views2/drivers/welcome" target="_blank"><i class="fa fa-car fa-lg" style="font-size: large; padding-right: 10px;"></i>Become a Driver</a>
+      <a href="mailto:sen4word@gmail.com" target="_blank"><i class="fa fa-envelope" style="font-size: large; padding-right: 10px;"></i></i>Contact Us</a>
+
+      <img src="/views/assets/rider-logo.PNG" alt="Rider Logo" class="logo-image">
+
+
+      
+    <% } else{ %>
+      <a href="/views/senders/welcome" class="active"><i class="fa fa-home" style="padding-right: 10px;"></i>Home</a>
+      <a href="/views/senders/login"><i class="fa fa-sign-in" aria-hidden="true" style="padding-right: 10px;"></i>Login</a>
+      <a href="/views/senders/signup"><i class="fa fa-fw fa-user" style="padding-right: 5px;"></i>Signup</a>
+      <a href="/views2/drivers/welcome" target="_blank"><i class="fa fa-car fa-lg" style="font-size: large; padding-right: 10px;"></i>Driver</a>
+      <a href="mailto:sen4word@gmail.com" target="_blank"><i class="fa fa-envelope" style="font-size: large; padding-right: 10px;"></i></i>Contact Us</a>
+      
+      <img src="/views/assets/rider-logo.PNG" alt="Rider Logo" class="logo-image">
+
+    <% } %>
+  <span class="menu-icon" onclick="toggleNav()" style="font-size: 32px; font-weight: bold;">&#9776;</span>
+  </div>
+
+  <img src="/views/assets/rider-logo.PNG" alt="Rider Logo" class="logo-image">
+
+  <script>
+    function toggleNav() {
+      var sidenav = document.getElementById("sidenav");
+      if (sidenav.style.left === "-250px") {
+        sidenav.style.left = "0";
+      } else {
+        sidenav.style.left = "-250px";
+      }
+    }
+  </script>
+
+</body>
+</html>

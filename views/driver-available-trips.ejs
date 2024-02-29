@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Driver Available Rides</title>
+    <style>
+      body {
+        margin: 10px;
+        font-family: Arial, sans-serif;
+      }
+
+      h3 {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+      h6 {
+        text-align: center;
+        margin-bottom: 5px;
+      }
+
+      form {
+        width: 90%;
+        max-width: 400px;
+        margin: 20px auto 40px;
+        padding: 20px;
+        background-color: #f9f9f9;
+        border-radius: 10px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 5px;
+      }
+
+      input[type="text"], input[type="number"], input[type="submit"] {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        box-sizing: border-box;
+      }
+
+      input[type="submit"] {
+        background-color: green;
+        color: white;
+        border: 2px solid green;
+        cursor: pointer;
+      }
+
+      input[type="submit"]:hover {
+        background-color: darkgreen;
+      }
+
+      #notification-container {
+        border: 1px solid lightgray;
+        min-height: 60vh;
+        padding: 10px;
+        overflow-y: auto;
+        width: 90%;
+        max-width: 400px;
+        margin: 0 auto 20px;
+        padding: 20px;
+        background-color: #f9f9f9;
+        border-radius: 10px;
+      }
+
+      .card {
+        margin-bottom: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        background-color: #f9f9f9;
+      }
+
+      .card-header {
+        background-color: #007bff;
+        color: white;
+        padding: 10px;
+        border-radius: 5px 5px 0 0;
+        font-size: 14px;
+      }
+
+      .card-body {
+        padding: 10px;
+      }
+
+      .card-title {
+        margin-top: 0;
+        font-size: 18px;
+      }
+
+      .card-text {
+        margin-bottom: 0;
+      }
+
+    .btn-primary {
+      background-color: green;
+      color: white;
+      border: 2px solid green;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .btn-danger {
+      background-color: red;
+      color: white;
+      border: 2px solid red;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+
+    .btn-primary:hover,
+    .btn-danger:hover {
+      opacity: 0.8;
+    }
+
+
+    .btn-primary:disabled,
+    .btn-danger:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+      @media (max-width: 600px) {
+        form {
+          width: 90%;
+          max-width: none;
+        }
+      }
+    </style>
+</head>
+<body style="margin: 10px;">
+  <header>
+    <%- include('./partials/drivers-header'); %>
+  </header>
+  <h3 style="text-align: center;">Driver Available Rides</h3>
+
+
+  <label style="margin-top: 20px; text-align: center;"><b>Notifications:</b></label>
+  <div style="border: 1px solid lightgray; min-height: 90vh;" id="notification-container"></div>
+
+  <footer>
+    <%- include('./partials/drivers-footer'); %>
+  </footer>
+</body>
+
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+
+<script>
+    const socket = io("http://localhost:5000")
+
+    const notificationContainer = document.getElementById("notification-container")
+
+    document.addEventListener("DOMContentLoaded", function() {
+      // JWT token stored as a cookie named 'driver_jwt'
+      const token = document.cookie.split('; ').find(row => row.startsWith('driver_jwt')).split('=')[1];
+
+      // Emit the "join" event with the token and current path
+      const currentPath = window.location.pathname;
+      socket.emit("join", token, currentPath);
+    });
+
+    socket.on("driverCreated", (data)=>{
+      localStorage.setItem(`driver-${socket.id}`, data.driver.id)
+      console.log("driverId saved")
+    })
+
+    socket.on("orderRequested", (order)=>{
+      console.log(order)
+      const div = document.createElement("div")
+      div.id= `${order.id}-cardContainer`
+
+      div.innerHTML = `<div style="margin: 10px;" class="card">
+        <h6 class="card-header">Order Request </h6>
+        <div class="card-body">
+          <h6 class="card-title">${order.sender.first_name} ${order.sender.last_name} is requesting a ride</h6>
+          <p class="card-text"><strong>Current Location:</strong> ${order.current_location}</p>
+          <p class="card-text"><strong>Destination:</strong> ${order.destination}</p>
+          <p class="card-text"><strong>Price: ₦${order.price}</strong></p><br>
+          <button id="${order.id}-accept-order" href="#" class="btn btn-primary"><strong>Accept</strong></button>
+          <button id="${order.id}-reject-order" href="#" class="btn btn-danger"><strong>Reject</strong></button>
+          </div>
+        </div>`
+
+        notificationContainer.appendChild(div)
+
+        const acceptOrderBtn = document.getElementById(`${order.id}-accept-order`)
+        const rejectOrderBtn = document.getElementById(`${order.id}-reject-order`)
+
+        // setTimeout(()=>{
+        //   if( acceptOrderBtn.innerHTML != 'Accepted' && rejectOrderBtn.innerHTML != "Rejected"){
+        //     div.innerHTML = " "
+        //   }
+        // }, 60000)
+
+        setTimeout(()=>{
+          if( acceptOrderBtn.innerHTML != 'Accepted'){
+            div.innerHTML = " "
+          }
+        }, 60000)
+
+        acceptOrderBtn.addEventListener("click", ()=>{
+          const driverId = localStorage.getItem(`driver-${socket.id}`)
+          const id = order.id
+
+          socket.emit("acceptOrder", id, driverId)
+        })
+
+        rejectOrderBtn.addEventListener("click", ()=>{
+          const driverId = localStorage.getItem(`driver-${socket.id}`)
+          const id = order.id
+
+          socket.emit("rejectOrder", id, driverId)
+        })
+    })
+    
+
+    socket.on("orderAccepted", (data)=>{
+      console.log(data.order)
+      const cardContainer = document.getElementById(`${data.order.id}-cardContainer`)
+      const div2 = document.createElement("div")
+
+      div2.innerHTML = `<div style="margin: 10px;" class="card">
+        <h6 class="card-header">Order Request </h6>
+        <div class="card-body">
+          <h6 class="card-title">${data.order.sender.first_name} ${data.order.sender.last_name} is requesting a ride</h6>
+          <p class="card-text"><strong>Current Location:</strong> ${data.order.current_location}</p>
+          <p class="card-text"><strong>Destination:</strong> ${data.order.destination}</p>
+          <p class="card-text"><strong>Price: ₦${data.order.price}</p></strong><br>
+          <button id="${data.order.id}-accept-order" href="#" class="btn btn-primary" disabled><strong>Accepted</strong></button>
+          <button id="${data.order.id}-finish-ride" href="#" class="btn btn-danger"><strong>Finish Ride</strong></button>
+          </div>
+        </div>`
+
+          notificationContainer.replaceChild(div2, cardContainer)
+      
+      // Disable all buttons
+      const buttons = document.querySelectorAll('.btn');
+      buttons.forEach(button => {
+        button.disabled = true;
+      });
+
+      // Enable Finish Ride button
+      const finishRideBtn = document.getElementById(`${data.order.id}-finish-ride`)
+      
+      finishRideBtn.disabled = false;
+
+      finishRideBtn.addEventListener("click", ()=>{
+        const driverId = localStorage.getItem(`driver-${socket.id}`)
+        const id = data.order.id
+
+        socket.emit("finishRide", id, driverId)
+      })
+    })
+
+    socket.on("orderRejected", (data)=>{
+      console.log(data);
+      
+      const acceptOrderButton = document.getElementById(`${data.order.id}-accept-order`);
+      const rejectOrderButton = document.getElementById(`${data.order.id}-reject-order`);
+
+      if (acceptOrderButton) {
+        acceptOrderButton.disabled = true;
+      }
+
+      if (rejectOrderButton) {
+        rejectOrderButton.disabled = true;
+        rejectOrderButton.innerHTML = 'Rejected';
+      }
+    })
+
+    socket.on("orderMissed", (data)=>{
+      console.log(data);
+      const notificationContainer = document.getElementById('notification-container');
+      const cardContainer = document.getElementById(`${data.order.id}-cardContainer`);
+
+      const div2 = document.createElement('div');
+      
+      div2.innerHTML = `<div style="margin: 10px;" class="card">
+        <h6 class="card-header">Order Accepted by another Driver</h6>
+        <div class="card-body">
+          <h6 class="card-title">${data.order.sender.first_name} ${data.order.sender.last_name} rquested for a ride</h6>
+          <p class="card-text"><strong>Location:</strong> ${data.order.current_location}</p>
+          <p class="card-text"><strong>Destination:</strong> ${data.order.destination}</p>
+          <p class="card-text"><strong>Price:</strong> ₦${data.order.price}</p><br>
+          <button id="${data.order.id}-accept-order" href="#" class="btn btn-primary" disabled><strong>Accepted</strong></button>
+          </div>
+        </div>`
+      
+      notificationContainer.replaceChild(div2 , cardContainer)
+    })
+
+    socket.on("rideFinished", (data)=>{
+        
+      const finishRideButton = document.getElementById(`${data.order.id}-finish-ride`);
+
+      if (finishRideButton) {
+        finishRideButton.disabled = true;
+        finishRideButton.innerHTML = 'Finished';
+      }
+
+      // Enable all buttons
+      const buttons = document.querySelectorAll('.btn');
+      buttons.forEach(button => {
+        button.disabled = false;
+      });
+    })
+</script>
+
+</html>

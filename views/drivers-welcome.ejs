@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome Drivers</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+
+    .container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin-top: 50px;
+      background-color: #f9f9f9;
+    }
+
+    .intro {
+      max-width: 600px;
+      padding: 20px;
+      margin-top: -200px;
+      background-color: #fff;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 10px 20px;
+      margin: 10px;
+      border: 2px solid #086c01;
+      border-radius: 5px;
+      text-decoration: none;
+      color: #086c01;
+      font-weight: bold;
+      transition: all 0.3s;
+    }
+
+    .btn:hover {
+      background-color: #086c01;
+      color: #fff;
+    }
+
+    @media screen and (max-width: 768px) {
+      .intro {
+        max-width: 90%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <%- include('./partials/drivers-header'); %>
+  </header>
+  <div class="container">
+    <div class="intro">
+      <h2>Welcome to Rider App</h2>
+      <p>Effortless Driving at Your Fingertips</p>
+      <p>Are you ready to hit the road and start earning? Become a driver with us!</p>
+      <p>Join our community of drivers and experience the flexibility and rewards of driving with Rider.</p>
+      <p><strong>Rider Team</strong></p>
+      
+      <a class="btn" href="/views2/drivers/login">Driver Login</a>
+      <a class="btn" href="/views2/drivers/signup">Driver Sign Up</a>
+    </div>
+  </div>
+  
+  <footer>
+    <%- include('./partials/drivers-footer'); %>
+  </footer>
+</body>
+</html>

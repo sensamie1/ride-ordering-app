@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sender Book Ride</title>
+  <style>
+    body {
+      margin: 10px;
+      font-family: Arial, sans-serif;
+    }
+
+    h3 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    h6 {
+      text-align: center;
+      margin-bottom: 5px;
+    }
+
+    form {
+      width: 90%;
+      max-width: 400px;
+      margin: 0 auto 20px;
+      padding: 20px;
+      background-color: #f9f9f9;
+      border-radius: 10px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    input[type="text"], input[type="number"], input[type="submit"] {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      box-sizing: border-box;
+    }
+
+    input[type="submit"] {
+      background-color: green;
+      color: white;
+      border: 2px solid green;
+      cursor: pointer;
+    }
+
+    input[type="submit"]:hover {
+      background-color: darkgreen;
+    }
+
+    #notification-container {
+      border: 1px solid lightgray;
+      min-height: 60vh;
+      padding: 10px;
+      overflow-y: auto;
+      width: 90%;
+      max-width: 400px;
+      margin: 0 auto 20px;
+      padding: 20px;
+      background-color: #f9f9f9;
+      border-radius: 10px;
+      display: block;
+    }
+
+    .card {
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      background-color: #f9f9f9;
+    }
+
+    .card-header {
+      background-color: #007bff;
+      color: white;
+      padding: 10px;
+      border-radius: 5px 5px 0 0;
+      font-size: 14px;
+    }
+
+    .card-body {
+      padding: 10px;
+    }
+
+    .card-title {
+      margin-top: 0;
+      font-size: 18px;
+    }
+
+    .card-text {
+      margin-bottom: 0;
+    }
+
+    @media (max-width: 600px) {
+      form {
+        width: 90%;
+        max-width: none;
+      }
+    }
+  </style>
+</head>
+<body style="margin: 10px;">
+  <header>
+    <%- include('./partials/senders-header'); %>
+  </header>
+
+    <h3 style="text-align: center;">Sender Book Ride</h3>
+
+    <form id="request-form" action="">
+
+        <div class="input-group mb-3">
+            <span class="input-group-text" id="inputGroup-sizing-default"><b>Location</b></span>
+            <input required type="text" placeholder="Enter Your Current Location" class="form-control" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-default" id="location-input">
+        </div>
+
+        <div class="input-group mb-3">
+            <span class="input-group-text" id="inputGroup-sizing-default"><b>Destination</b></span>
+            <input required type="text"  placeholder="Enter Your Destination" class="form-control" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-default" id="destination-input">
+        </div>
+
+        <div class="input-group mb-3">
+            <span class="input-group-text" id="inputGroup-sizing-default"><b>Price</b></span>
+            <input required type="number"  class="form-control" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-default" id="price-input" disabled>
+        </div>
+
+        <input type="submit" class="btn btn-primary" value="Request">
+
+    </form>
+    <label style="margin-top: 20px; text-align: center;"><b>Notifications:</b></label>
+    <div style="border: 1px solid lightgray; min-height: 60vh;" id="notification-container"></div>
+  
+    <footer>
+      <%- include('./partials/senders-footer'); %>
+    </footer>
+
+</body>
+
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+
+<script>
+    const socket = io("http://localhost:5000")
+
+    const requestForm = document.getElementById("request-form")
+    const notificationContainer = document.getElementById("notification-container")
+    
+
+    document.addEventListener("DOMContentLoaded", function() {
+      // JWT token stored as a cookie named 'sender_jwt'
+      const token = document.cookie.split('; ').find(row => row.startsWith('sender_jwt')).split('=')[1];
+
+      // Emit the "join" event with the token and current path
+      const currentPath = window.location.pathname;
+      socket.emit("join", token, currentPath);
+    });
+
+    socket.on("senderCreated", (data)=>{
+      localStorage.setItem(`sender-${socket.id}`, data.sender.id)
+      console.log("SenderId saved")
+    })
+
+    // Function to disable the form
+    function disableForm() {
+      const formElements = document.getElementById("request-form").elements;
+      for (let i = 0; i < formElements.length; i++) {
+        formElements[i].disabled = true;
+      }
+    }
+
+    
+    // Function to enable the form except for the price input
+    function enableForm() {
+      const formElements = document.getElementById("request-form").elements;
+      for (let i = 0; i < formElements.length; i++) {
+        if (formElements[i].id !== "price-input") {
+          // Enable the form element if it's not the price input
+          formElements[i].disabled = false;
+        }
+      }
+    }
+
+
+    // Function to check if the entire form is disabled
+    function isFormDisabled() {
+      const formElements = document.getElementById("request-form").elements;
+      for (let i = 0; i < formElements.length; i++) {
+        if (!formElements[i].disabled) {
+          return false; // At least one element is enabled, so the form is not disabled
+        }
+      }
+      return true; // All elements are disabled, so the form is considered disabled
+    }
+
+
+    // A click event listener to the form
+    document.getElementById("request-form").addEventListener("click", function(event) {
+      // Check if the entire form is disabled
+      if (isFormDisabled()) {
+        // Form is disabled, display a message
+        alert("You cannot request another ride until the current ride finishes or expires.");
+      }
+    });
+
+
+
+    requestForm.addEventListener("submit", (e)=>{
+      e.preventDefault()
+      const current_location = e.target[0].value
+      const destination = e.target[1].value
+      const price = e.target[2].value
+      const senderId = localStorage.getItem(`sender-${socket.id}`)
+
+
+      const div = document.createElement("div")
+
+      div.innerHTML =  `<div style="margin: 10px;" class="card">
+        <h6 class="card-header">Order Request</h6>
+        <div class="card-body">
+          <h6 class="card-title">You have requested a ride. Wait for a driver to accept your request.</h6>
+          <p class="card-text"><strong>Status:</strong> pending</p>
+          <p class="card-text"><strong>Current Location:</strong> ${current_location}</p>
+          <p class="card-text"><strong>Destination:</strong> ${destination}</p>
+          <p class="card-text"><strong>Price: ₦${price}</strong></p>
+        </div>
+        </div>`
+
+          notificationContainer.appendChild(div) 
+
+      socket.emit("requestOrder", {current_location, destination, price, senderId})
+      // Disable the form upon submission
+      disableForm();
+    })
+    
+
+    // Event listener for the destination input change
+    const destinationInput = document.getElementById("destination-input")
+    const priceInput = document.getElementById("price-input")
+    const locationInput = document.getElementById("location-input")
+
+    // Event listener for the destination input change
+    destinationInput.addEventListener("input", function() {
+      updatePrice();
+    });
+
+    // Event listener for the location input change
+    locationInput.addEventListener("input", function() {
+      updatePrice();
+    });
+
+    function updatePrice() {
+      const locationValue = locationInput.value.trim();
+      const destinationValue = destinationInput.value.trim();
+
+      if (locationValue === '' || destinationValue === '') {
+        priceInput.value = '';
+      } else {
+        const randomPrice = Math.floor(Math.random() * (50 - 10 + 1)) * 100 + 1000; // Generates random number in hundreds between 1000 and 5000
+        priceInput.value = randomPrice;
+      }
+    }
+
+
+    // Initialize a variable to track if order has been accepted
+    let orderAccepted = false;
+
+    socket.on("orderAccepted", (data)=>{
+      const div = document.createElement("div")
+
+      div.innerHTML =  `<div style="margin: 10px;" class="card">
+        <h6 class="card-header">Order Request</h6>
+        <div class="card-body">
+          <h6 class="card-title">Driver ${data.order.driver.first_name} ${data.order.driver.last_name} has accepted your ride</h6>
+          <p class="card-text"><strong>Vehicle:</strong> ${data.order.driver.vehicle_color} ${data.order.driver.vehicle_name}</p>
+          <p class="card-text"><strong>Status:</strong> ${data.order.status}</p>
+          <p class="card-text"><strong>Current Location:</strong> ${data.order.current_location}</p>
+          <p class="card-text"><strong>Destination:</strong> ${data.order.destination}</p>
+          <p class="card-text"><strong>Price: ₦${data.order.price}</strong></p>
+        </div>
+        </div>`
+
+          notificationContainer.appendChild(div)
+      
+        // Set orderAccepted to true
+        orderAccepted = true;
+    })
+
+
+    // // Listen for orderRejected event
+    // socket.on("orderRejected", (data) => {
+    //   // Set a timeout to check if orderAccepted is false after 1 minute
+    //   setTimeout(() => {
+    //     if (!orderAccepted) {
+    //       console.log(data)
+    //       const notificationContainer = document.getElementById('notification-container');
+
+    //       const div = document.createElement('div');
+    //       div.id = `${data.order.id}-expired-order`
+
+    //       div.innerHTML = `<div style="margin: 10px;" class="card">
+    //         <h6 class="card-header">No Driver was found for your order request.</h6>
+    //         <div class="card-body">
+    //           <h6 class="card-title"><strong>Status:</strong> expired </h6>
+    //           <p class="card-text"><strong>Current Location:</strong> ${data.order.current_location}</p>
+    //           <p class="card-text"><strong>Destination:</strong> ${data.order.destination}</p>
+    //           <p class="card-text"><strong>Price: ₦${data.order.price}</strong></p>
+    //         </div>
+    //         </div>`
+          
+    //       notificationContainer.appendChild(div)
+    //       // Enable the form when an order expires
+    //       enableForm();  
+    //     }
+    //   }, 60000); // 1 minute timeout
+    // });
+
+
+    // Listen for orderRejected event
+    socket.on("orderRejected", (data) => {
+      // Set a timeout to check if orderAccepted is false after 1 minute
+      setTimeout(() => {
+        if (!orderAccepted) {
+          console.log(data)
+          const notificationContainer = document.getElementById('notification-container');
+
+          // Check if the last child of the notification container is the same as the newly created div
+          if (notificationContainer.lastChild.id !== `${data.order.id}-expired-order`) {
+            const div = document.createElement('div');
+            div.id = `${data.order.id}-expired-order`;
+
+            div.innerHTML = `<div style="margin: 10px;" class="card">
+              <h6 class="card-header">No Driver was found for your order request.</h6>
+              <div class="card-body">
+                <h6 class="card-title"><strong>Status:</strong> expired </h6>
+                <p class="card-text"><strong>Current Location:</strong> ${data.order.current_location}</p>
+                <p class="card-text"><strong>Destination:</strong> ${data.order.destination}</p>
+                <p class="card-text"><strong>Price: ₦${data.order.price}</strong></p>
+              </div>
+            </div>`;
+          
+            notificationContainer.appendChild(div);
+            // Enable the form when an order expires
+            enableForm();  
+          }
+        }
+      }, 60000); // 1 minute timeout
+    });
+
+
+
+
+
+    socket.on("orderExpired", (data)=>{
+      console.log(data)
+      const notificationContainer = document.getElementById('notification-container');
+
+      const div = document.createElement('div');
+      div.id = `${data.order.id}-expired-order`
+
+      div.innerHTML = `<div style="margin: 10px;" class="card">
+        <h6 class="card-header">No Driver was found for your order request.</h6>
+        <div class="card-body">
+          <h6 class="card-title"><strong>Status:</strong> ${data.order.status}</h6>
+          <p class="card-text"><strong>Current Location:</strong> ${data.order.current_location}</p>
+          <p class="card-text"><strong>Destination:</strong> ${data.order.destination}</p>
+          <p class="card-text"><strong>Price: ₦${data.order.price}</strong></p>
+        </div>
+        </div>`
+      
+      notificationContainer.appendChild(div)
+      // Enable the form when an order expires
+      enableForm();
+    })
+
+    socket.on("rideFinished", (data)=>{
+      console.log(data);
+    
+      const div = document.createElement('div');
+
+      div.innerHTML = `<div style="margin: 10px;" class="card">
+        <h6 class="card-header">Ride Finished</h6>
+        <div class="card-body">
+          <h6 class="card-title">Your ride with Driver ${data.order.driver.first_name} ${data.order.driver.last_name} has finished</h6>
+          <p class="card-text"><strong>Vehicle:</strong> ${data.order.driver.vehicle_color} ${data.order.driver.vehicle_name}</p>
+          <p class="card-text"><strong>Status:</strong> ${data.order.status}</p>
+          <p class="card-text"><strong>Started from:</strong> ${data.order.current_location}</p>
+          <p class="card-text"><strong>Ended in:</strong> ${data.order.destination}</p>
+          <p class="card-text"><strong>Cost of ride: ₦${data.order.price}</strong></p>
+        </div>
+        </div>`
+      
+      notificationContainer.appendChild(div)
+      // Enable the form when a ride is finished
+      enableForm();
+    })
+
+</script>
+
+</html>
