@@ -102,7 +102,7 @@ const SenderVerifyEmail = async (req, res) => {
       // Update only the isVerified field
       await SenderModel.findByIdAndUpdate(decoded._id, { isVerified: true });
 
-      logger.info('[VerifyEmail] => Verify Email process done.')
+      logger.info('[SenderVerifyEmail] => Sender verify Email process done.')
       return res.status(200).json({
         message: 'Email verified successfully.',
         success: true,

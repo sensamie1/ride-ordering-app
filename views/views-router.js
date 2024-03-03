@@ -174,7 +174,7 @@ router.get('/senders/login', (req, res) => {
         if (decodedToken.exp * 1000 < Date.now()) {
           // If the token has expired, clear it from cookies
           res.clearCookie('sender_jwt');
-          // Redirect to login page or handle the expiration as appropriate
+          // Redirect to login page 
           res.redirect('/views/senders/login');
         } else {
           // If the token is still valid, redirect to the home page
@@ -405,8 +405,13 @@ router.get('/senders/my-rides', async (req, res) => {
       }));
 
       if (orders.length === 0) {
-        req.flash('Rides not found. You have not completed any trip.')
-        res.render('sender-rides');
+        req.flash('error', 'Rides not found. You have not completed any trip.')
+        res.render('sender-rides', {
+          sender: res.locals.sender || null,
+          rides: rides,
+          currentPage: page,
+          pages: Math.ceil(totalCount / limit)
+        });
       } else {
           res.render('sender-rides', {
             sender: res.locals.sender || null,

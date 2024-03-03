@@ -176,7 +176,7 @@ router.get('/drivers/login', (req, res) => {
         if (decodedToken.exp * 1000 < Date.now()) {
           // If the token has expired, clear it from cookies
           res.clearCookie('driver_jwt');
-          // Redirect to login page or handle the expiration as appropriate
+          // Redirect to login page
           res.redirect('/views2/drivers/login');
         } else {
           // If the token is still valid, redirect to the home page
@@ -406,8 +406,13 @@ router.get('/drivers/my-trips', async (req, res) => {
     }));
 
     if (orders.length === 0) {
-      req.flash('Trips not found. You have not completed any trip.')
-      res.render('driver-trips');
+      req.flash('error', 'Trips not found. You have not completed any trip.')
+      res.render('driver-trips', {
+        driver: res.locals.driver || null,
+        rides: rides,
+        currentPage: page,
+        pages: Math.ceil(totalCount / limit)
+      });
     } else {
         res.render('driver-trips', {
           driver: res.locals.driver || null,
