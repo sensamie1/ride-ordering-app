@@ -2,10 +2,11 @@
   "name": "ride_ordering_app",
   "version": "1.0.0",
   "description": "",
-  "main": "server.js",
+  "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "app": "nodemon app.js"
+    "start": "node app.js",
+    "start:dev": "nodemon app.js"
   },
   "keywords": [],
   "author": "",
@@ -26,5 +27,8 @@
     "nodemon": "^3.0.3",
     "socket.io": "^4.7.4",
     "winston": "^3.11.0"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^5.0.2"
   }
 }
